@@ -1,15 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --bg-color: #F9F9F9;
-    --text-color: #1a1a1a;
-    --primary-color: #007BFF;
+    --bg-color: #f8f9fa;
+    --text-color: #495057;
+    --heading-color: #212529;
+    --primary-color: #2c3e50;
+    --accent-color: #27ae60;
     --card-bg: #FFFFFF;
-    --border-color: #E0E0E0;
-    --locked-bg: #F2F2F2;
-    --locked-text: #BDBDBD;
-    --completed-bg: #f0f8ff;
-    --completed-icon: #0056b3;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+    --locked-bg: #e9ecef;
+    --locked-text: #adb5bd;
 }
 
 * {
@@ -22,40 +23,47 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .main-header {
     background: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
-    padding: 1rem 2rem;
+    padding: 1.25rem 2.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .main-header h1 {
     font-size: 1.5rem;
+    color: var(--heading-color);
+    font-weight: 600;
 }
 
 .tool-btn, .back-btn {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.6rem 1rem;
-    border-radius: 5px;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    transition: background 0.2s;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(44, 62, 80, 0.1);
 }
 
 .tool-btn:hover, .back-btn:hover {
-    background: var(--completed-icon);
+    background: #34495e; /* Darken primary color */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(44, 62, 80, 0.2);
 }
 
 #app-container {
-    padding: 2rem;
+    padding: 2.5rem;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -69,11 +77,52 @@ body {
 .semester-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.5rem;
     text-align: center;
-    transition: all 0.3s;
+    transition: all 0.3s ease-in-out;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.semester-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
+}
+
+.semester-card {
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.semester-card.newly-unlocked {
+    animation: unlock 0.8s ease-out forwards;
+}
+
+@keyframes unlock {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .semester-card h2 {
@@ -92,29 +141,44 @@ body {
 
 /* --- Card States --- */
 .semester-card.active {
-    border-left: 5px solid var(--primary-color);
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+    border-top: 4px solid var(--primary-color);
 }
 
 .semester-card.completed {
-    background: var(--completed-bg);
-    border-color: #cce7ff;
+    border-top: 4px solid var(--accent-color);
 }
 .semester-card.completed .status-icon {
-    color: var(--primary-color);
+    color: var(--accent-color);
 }
 .semester-card.completed .status-text {
-    color: var(--completed-icon);
+    color: var(--accent-color);
+    font-weight: 700;
 }
 
 .semester-card.locked {
     background: var(--locked-bg);
-    border-color: #E0E0E0;
     color: var(--locked-text);
     cursor: not-allowed;
+    border-top: 4px solid var(--border-color);
 }
 .semester-card.locked .status-icon {
     color: var(--locked-text);
+}
+
+.progress-bar-container {
+    width: 100%;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 8px;
+    margin-top: 1rem;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
 }
 
 .badge-award {
@@ -153,22 +217,36 @@ body {
 .course-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.07);
 }
 
 .course-card h3 a {
     text-decoration: none;
-    color: var(--primary-color);
+    color: var(--heading-color);
     font-size: 1.2rem;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.course-card h3 a:hover {
+    color: var(--primary-color);
 }
 
 .course-prerequisites {
     font-size: 0.8rem;
     color: #888;
     margin: 0.5rem 0 1.5rem 0;
+    font-weight: 500;
 }
 
 .checklist {

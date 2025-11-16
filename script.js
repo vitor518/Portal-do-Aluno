@@ -50,6 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         semesters.forEach((_, semesterIdx) => {
             if (isSemesterCompleted(semesterIdx) && !earnedBadges.includes(badges[semesterIdx])) {
                 earnedBadges.push(badges[semesterIdx]);
+                // Trigger confetti celebration
+                confetti({
+                    particleCount: 150,
+                    spread: 90,
+                    origin: { y: 0.6 }
+                });
             }
         });
         saveProgress();
@@ -77,6 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon = '<i class="fas fa-rocket"></i>';
                 statusText = 'Iniciar / Continuar';
                 stateClass = 'active';
+
+                // Check if it was previously locked to add unlock animation
+                const wasLocked = card.classList.contains('locked');
+                if(wasLocked) {
+                    card.classList.add('newly-unlocked');
+                }
+
                 isPreviousSemesterCompleted = false;
             } else {
                 icon = '<i class="fas fa-lock"></i>';
@@ -85,11 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             card.classList.add(stateClass);
+            const completedCourses = semester.courses.filter((_, courseIdx) => isCourseCompleted(semesterIdx, courseIdx)).length;
+            const totalCourses = semester.courses.length;
+            const progressPercentage = totalCourses > 0 ? (completedCourses / totalCourses) * 100 : 0;
+
             card.innerHTML = `
                 <h2>${semester.semester}ª Etapa</h2>
                 <div class="status-icon">${icon}</div>
                 <p class="status-text">${statusText}</p>
                 ${(stateClass === 'completed' && earnedBadges.includes(badges[semesterIdx])) ? `<div class="badge-award"><i class="fas fa-medal"></i> ${badges[semesterIdx]}</div>` : ''}
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${progressPercentage}%;"></div>
+                </div>
             `;
 
             if (stateClass !== 'locked') {
