@@ -1,17 +1,4 @@
-/* COPIE TODO O CONTEÚDO de cursos/ciencia-computacao/style.css */
-/* Ou importe o CSS compartilhado: */
-@import url('../../shared/styles/global.css');
-
-/* Personalizações específicas para Matemática */
 :root {
     --primary-color: #e74c3c;  /* Vermelho para matemática */
     --accent-color: #f39c12;   /* Laranja */
-}
-
-.semester-card.active {
-    border-top: 4px solid var(--primary-color);
-}
-
-.course-btn {
-    background: var(--primary-color);
 }

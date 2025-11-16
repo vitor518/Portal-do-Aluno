@@ -1,3 +1,5 @@
+const API_BASE_URL = 'http://localhost:3000';
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     // Views
@@ -11,24 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleViewBtn = document.getElementById('toggle-view-btn');
     const scheduleContainer = document.getElementById('schedule-container');
 
-    // Auth Elements
-    const authModal = document.getElementById('auth-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const loginBtn = document.getElementById('login-btn');
-    const registerBtn = document.getElementById('register-btn');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const showRegisterLink = document.getElementById('show-register-form');
-    const showLoginLink = document.getElementById('show-login-form');
-    const loginSubmitBtn = document.getElementById('login-submit-btn');
-    const registerSubmitBtn = document.getElementById('register-submit-btn');
-    const loginErrorEl = document.getElementById('login-error');
-    const registerErrorEl = document.getElementById('register-error');
-    const authButtons = document.getElementById('auth-buttons');
-    const userStatus = document.getElementById('user-status');
-    const userEmailEl = document.getElementById('user-email');
-    const logoutBtn = document.getElementById('logout-btn');
-
     // Pomodoro Elements
     const pomodoroTimerEl = document.getElementById('pomodoro-timer');
     const pomodoroStartBtn = document.getElementById('pomodoro-start');
@@ -37,22 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configuração específica para Matemática
     const courseName = 'matematica';
-
-    // DOM Elements (mesmos do curso de C.C.)
-    const dashboardView = document.getElementById('dashboard-view');
-    const courseView = document.getElementById('course-view');
-    const dependencyView = document.getElementById('dependency-view');
-    const courseViewTitle = document.getElementById('course-view-title');
-    const coursesGridContainer = document.getElementById('courses-grid-container');
-    const backToDashboardBtn = document.getElementById('back-to-dashboard');
-    const toggleViewBtn = document.getElementById('toggle-view-btn');
-    const scheduleContainer = document.getElementById('schedule-container');
-
-    // Pomodoro Elements
-    const pomodoroTimerEl = document.getElementById('pomodoro-timer');
-    const pomodoroStartBtn = document.getElementById('pomodoro-start');
-    const pomodoroPauseBtn = document.getElementById('pomodoro-pause');
-    const pomodoroResetBtn = document.getElementById('pomodoro-reset');
 
     // State usando sistema unificado
     let courseProgress = storage.getCourseProgress(courseName).progress || {};
@@ -74,36 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Logic (igual ao C.C., só muda o array de badges) ---
-    const isCourseCompleted = (semesterIdx, courseIdx) => {
-        const courseId = `s${semesterIdx}-c${courseIdx}`;
-        return courseProgress[courseId] && courseProgress[courseId].main;
-    };
-
-    const isSemesterCompleted = (semesterIdx) => {
-        return semesters[semesterIdx].courses.every((_, courseIdx) =>
-            isCourseCompleted(semesterIdx, courseIdx)
-        );
-    };
-
-    const checkAndAwardBadges = () => {
-        semesters.forEach((_, semesterIdx) => {
-            if (isSemesterCompleted(semesterIdx) && !earnedBadges.includes(badges[semesterIdx])) {
-                earnedBadges.push(badges[semesterIdx]);
-                storage.addBadge(courseName, badges[semesterIdx]);
-
-                // Trigger confetti celebration
-                confetti({
-                    particleCount: 150,
-                    spread: 90,
-                    origin: { y: 0.6 }
-                });
-            }
-        });
-        saveProgress();
-    };
-
-
-    // --- Logic ---
     const isCourseCompleted = (semesterIdx, courseIdx) => {
         const courseId = `s${semesterIdx}-c${courseIdx}`;
         return courseProgress[courseId] && courseProgress[courseId].main;
@@ -366,38 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
         }
         dependencyView.append(svg.node());
-    };
-
-    // --- Pomodoro Logic ---
-    const updateTimerDisplay = () => {
-        const minutes = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-        const seconds = (timerSeconds % 60).toString().padStart(2, '0');
-        pomodoroTimerEl.textContent = `${minutes}:${seconds}`;
-    };
-
-    const startTimer = () => {
-        if (isTimerRunning) return;
-        isTimerRunning = true;
-        timerInterval = setInterval(() => {
-            timerSeconds--;
-            updateTimerDisplay();
-            if (timerSeconds <= 0) {
-                clearInterval(timerInterval);
-                alert("Pomodoro concluído! Hora de uma pausa.");
-                isTimerRunning = false;
-            }
-        }, 1000);
-    };
-
-    const pauseTimer = () => {
-        isTimerRunning = false;
-        clearInterval(timerInterval);
-    };
-
-    const resetTimer = () => {
-        pauseTimer();
-        timerSeconds = 1500;
-        updateTimerDisplay();
     };
 
     // App listeners

@@ -3,52 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal do Aluno - Progressão Livre</title>
+    <title>Ciência da Computação - Universidade Livre</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="../../shared/styles/global.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="main-header">
-        <h1>Portal do Aluno</h1>
+        <h1>Ciência da Computação</h1>
         <div class="header-tools">
-            <div id="user-status" class="hidden">
-                <span id="user-email"></span>
-                <button id="logout-btn" class="tool-btn-secondary">Logout</button>
-            </div>
-            <div id="auth-buttons">
-                <button id="login-btn" class="tool-btn">Login</button>
-                <button id="register-btn" class="tool-btn-secondary">Cadastro</button>
-            </div>
+            <button onclick="window.location.href='../../dashboard/index.html'" class="tool-btn">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button onclick="window.location.href='../../index.html'" class="tool-btn">
+                <i class="fas fa-home"></i> Home
+            </button>
             <button id="toggle-view-btn" class="tool-btn">
                 <i class="fas fa-project-diagram"></i> Ver Dependências
             </button>
+            <button id="chat-icon" class="tool-btn">
+                <i class="fas fa-robot"></i> Tutor IA
+            </button>
         </div>
     </header>
-
-    <!-- Auth Modal -->
-    <div id="auth-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button id="close-modal-btn" class="close-btn">&times;</button>
-            <div id="login-form">
-                <h2>Login</h2>
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-password" placeholder="Senha" required>
-                <button id="login-submit-btn" class="modal-btn">Entrar</button>
-                <p id="login-error" class="error-message"></p>
-            </div>
-            <div id="register-form" class="hidden">
-                <h2>Cadastro</h2>
-                <input type="email" id="register-email" placeholder="Email" required>
-                <input type="password" id="register-password" placeholder="Senha" required>
-                <button id="register-submit-btn" class="modal-btn">Criar Conta</button>
-                <p id="register-error" class="error-message"></p>
-            </div>
-            <p class="form-switcher">
-                <a href="#" id="show-register-form">Não tem uma conta? Cadastre-se</a>
-                <a href="#" id="show-login-form" class="hidden">Já tem uma conta? Faça login</a>
-            </p>
-        </div>
-    </div>
 
     <main id="app-container">
         <!-- Dashboard View: Mostra os cards de Etapa -->
@@ -100,11 +77,6 @@
     <script src="script.js"></script>
 
     <!-- Chatbot Elements -->
-    <div id="chat-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3.49988 18.0264C3.49988 18.0264 5.37898 16.0682 9.00002 16.0682C12.621 16.0682 14.5 18.0264 14.5 18.0264M12.5 3.10058C16.0376 3.10058 18.909 5.97199 18.909 9.50962C18.909 13.0472 16.0376 15.9186 12.5 15.9186C11.5361 15.9186 10.6358 15.6888 9.83084 15.2854L5.61917 19.5002L6.11306 14.931C4.46914 13.7513 3.49988 11.7588 3.49988 9.50962C3.49988 5.97199 6.37129 3.10058 9.90909 3.10058C10.7482 3.10058 11.5432 3.29532 12.2393 3.64673C12.3323 3.69344 12.4182 3.73147 12.5 3.76135Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </div>
     <div id="chat-window" class="hidden">
         <div id="chat-header">
             <h3>AI Tutor</h3>

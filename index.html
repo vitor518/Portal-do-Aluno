@@ -149,9 +149,78 @@
             color: #666;
             font-size: 1rem;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <header class="main-header" style="position: absolute; top: 0; right: 0; padding: 1rem;">
+        <div id="user-status" class="hidden">
+            <span id="user-email"></span>
+            <button id="logout-btn" class="tool-btn-secondary">Logout</button>
+        </div>
+        <div id="auth-buttons">
+            <button id="login-btn" class="tool-btn">Login</button>
+            <button id="register-btn" class="tool-btn-secondary">Cadastro</button>
+        </div>
+    </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-btn">&times;</button>
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-submit-btn" class="modal-btn">Entrar</button>
+                <p id="login-error" class="error-message"></p>
+            </div>
+            <div id="register-form" class="hidden">
+                <h2>Cadastro</h2>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-submit-btn" class="modal-btn">Criar Conta</button>
+                <p id="register-error" class="error-message"></p>
+            </div>
+            <p class="form-switcher">
+                <a href="#" id="show-register-form">Não tem uma conta? Cadastre-se</a>
+                <a href="#" id="show-login-form" class="hidden">Já tem uma conta? Faça login</a>
+            </p>
+        </div>
+    </div>
+
     <div class="hero">
         <div style="font-size: 5rem; margin-bottom: 1rem;">🎓</div>
         <h1>Universidade Virtual Livre</h1>
@@ -218,6 +287,7 @@
         <p style="margin-top: 0.5rem; opacity: 0.8;">Feito com ❤️ para democratizar a educação</p>
     </footer>
 
+    <script src="shared/scripts/auth.js"></script>
     <script>
         function scrollToCourses() {
             document.getElementById('courses-section').scrollIntoView({ behavior: 'smooth' });

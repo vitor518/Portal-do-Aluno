@@ -1,5 +1,6 @@
 // Import necessary libraries
 const express = require('express');
+const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 require('dotenv').config();
@@ -11,19 +12,19 @@ const port = 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '..')));
 
 // Initialize Google Generative AI & other dependencies
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-const low = require('lowdb');
-const FileSync = require('lowdb/adapters/FileSync');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Setup lowdb
-const adapter = new FileSync('db.json');
-const db = low(adapter);
-db.defaults({ users: [] }).write();
+// Setup PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/universidade',
+});
 
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'a-very-secret-key-that-should-be-in-env';
@@ -38,29 +39,41 @@ app.post('/api/register', async (req, res) => {
         return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const existingUser = db.get('users').find({ email }).value();
-    if (existingUser) {
-        return res.status(400).json({ error: 'User with this email already exists.' });
+    try {
+        const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: 'User with this email already exists.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await pool.query(
+            'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+            [email, hashedPassword]
+        );
+        res.status(201).json({ message: 'User registered successfully.', user: newUser.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = { id: Date.now().toString(), email, password: hashedPassword, progress: {} };
-
-    db.get('users').push(user).write();
-    res.status(201).json({ message: 'User registered successfully.' });
 });
 
 // Login a user
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
-    const user = db.get('users').find({ email }).value();
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
 
-    if (!user || !await bcrypt.compare(password, user.password)) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
+        if (!user || !await bcrypt.compare(password, user.password)) {
+            return res.status(401).json({ error: 'Invalid credentials.' });
+        }
+
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ token });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
 });
 
 
@@ -80,16 +93,33 @@ const authenticateToken = (req, res, next) => {
 // --- Progress Sync API ---
 
 // Get user progress
-app.get('/api/progress', authenticateToken, (req, res) => {
-    const user = db.get('users').find({ id: req.user.userId }).value();
-    res.json(user.progress || {});
+app.get('/api/progress', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT progress_data FROM progress WHERE user_id = $1', [req.user.userId]);
+        res.json(result.rows[0]?.progress_data || {});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Save user progress
-app.post('/api/progress', authenticateToken, (req, res) => {
-    const { progress } = req.body;
-    db.get('users').find({ id: req.user.userId }).assign({ progress }).write();
-    res.json({ message: 'Progress saved successfully.' });
+app.post('/api/progress', authenticateToken, async (req, res) => {
+    const { courseName, progressData } = req.body;
+    try {
+        // Upsert logic: Update if exists, otherwise insert
+        const updateQuery = `
+            INSERT INTO progress (user_id, course_name, progress_data)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, course_name)
+            DO UPDATE SET progress_data = $3, last_updated = NOW()
+        `;
+        await pool.query(updateQuery, [req.user.userId, courseName, progressData]);
+        res.json({ message: 'Progress saved successfully.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 
