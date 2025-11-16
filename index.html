@@ -3,117 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal do Aluno - Progressão Livre</title>
+    <title>Universidade Virtual Livre</title>
+    <link rel="stylesheet" href="shared/styles/global.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos específicos da landing page */
+        .hero {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+            color: white;
+            padding: 4rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease 0.2s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .courses-grid {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #9b59b6, #3498db);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .course-card.math::before {
+            background: linear-gradient(90deg, #e74c3c, #f39c12);
+        }
+
+        .course-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .course-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .course-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #9b59b6;
+        }
+
+        .course-card.math .course-icon {
+            color: #e74c3c;
+        }
+
+        .course-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .course-card.math .course-btn {
+            background: #e74c3c;
+        }
+
+        .course-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .stats-section {
+            background: #f8f9fa;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-item {
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <header class="main-header">
-        <h1>Portal do Aluno</h1>
-        <div class="header-tools">
-            <div id="user-status" class="hidden">
-                <span id="user-email"></span>
-                <button id="logout-btn" class="tool-btn-secondary">Logout</button>
+    <div class="hero">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">🎓</div>
+        <h1>Universidade Virtual Livre</h1>
+        <p class="subtitle">Educação de qualidade, gratuita e acessível para todos</p>
+        <button onclick="scrollToCourses()" style="background: #27ae60; color: white; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin-top: 1rem;">
+            Explorar Cursos <i class="fas fa-arrow-down"></i>
+        </button>
+    </div>
+
+    <div class="stats-section">
+        <h2 style="margin-bottom: 2rem; color: #2c3e50;">Nossa Comunidade</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="total-courses">2</div>
+                <div class="stat-label">Cursos Completos</div>
             </div>
-            <div id="auth-buttons">
-                <button id="login-btn" class="tool-btn">Login</button>
-                <button id="register-btn" class="tool-btn-secondary">Cadastro</button>
+            <div class="stat-item">
+                <div class="stat-number" id="total-disciplines">100+</div>
+                <div class="stat-label">Disciplinas</div>
             </div>
-            <button id="toggle-view-btn" class="tool-btn">
-                <i class="fas fa-project-diagram"></i> Ver Dependências
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Gratuito</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="courses-grid" id="courses-section">
+        <!-- Ciência da Computação -->
+        <div class="course-card cs" onclick="navigateToCourse('ciencia-computacao')">
+            <div class="course-icon"><i class="fas fa-laptop-code"></i></div>
+            <h2 style="color: #2c3e50; margin-bottom: 1rem;">Ciência da Computação</h2>
+            <p style="color: #666; line-height: 1.6;">
+                Domine programação, algoritmos, estruturas de dados, inteligência artificial e prepare-se para uma carreira em tecnologia.
+            </p>
+            <div style="display: flex; gap: 1.5rem; margin-top: 1.5rem; color: #888; font-size: 0.9rem;">
+                <span><i class="fas fa-book"></i> 7 Etapas</span>
+                <span><i class="fas fa-clock"></i> ~2 anos</span>
+            </div>
+            <button class="course-btn">
+                Começar Jornada <i class="fas fa-arrow-right"></i>
             </button>
         </div>
-    </header>
 
-    <!-- Auth Modal -->
-    <div id="auth-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button id="close-modal-btn" class="close-btn">&times;</button>
-            <div id="login-form">
-                <h2>Login</h2>
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-password" placeholder="Senha" required>
-                <button id="login-submit-btn" class="modal-btn">Entrar</button>
-                <p id="login-error" class="error-message"></p>
-            </div>
-            <div id="register-form" class="hidden">
-                <h2>Cadastro</h2>
-                <input type="email" id="register-email" placeholder="Email" required>
-                <input type="password" id="register-password" placeholder="Senha" required>
-                <button id="register-submit-btn" class="modal-btn">Criar Conta</button>
-                <p id="register-error" class="error-message"></p>
-            </div>
-            <p class="form-switcher">
-                <a href="#" id="show-register-form">Não tem uma conta? Cadastre-se</a>
-                <a href="#" id="show-login-form" class="hidden">Já tem uma conta? Faça login</a>
+        <!-- Matemática -->
+        <div class="course-card math" onclick="navigateToCourse('matematica')">
+            <div class="course-icon"><i class="fas fa-square-root-alt"></i></div>
+            <h2 style="color: #2c3e50; margin-bottom: 1rem;">Matemática</h2>
+            <p style="color: #666; line-height: 1.6;">
+                Fundamentos sólidos em cálculo, álgebra linear, estatística, análise matemática e matemática aplicada.
             </p>
-        </div>
-    </div>
-
-    <main id="app-container">
-        <!-- Dashboard View: Mostra os cards de Etapa -->
-        <div id="dashboard-view">
-            <!-- Os cards de semestre serão inseridos aqui -->
-        </div>
-
-        <!-- Course View: Mostra os cards de Curso de uma Etapa específica -->
-        <div id="course-view" class="hidden">
-            <button id="back-to-dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
-            <h2 id="course-view-title"></h2>
-            <div id="courses-grid-container">
-                <!-- Os cards de curso serão inseridos aqui -->
+            <div style="display: flex; gap: 1.5rem; margin-top: 1.5rem; color: #888; font-size: 0.9rem;">
+                <span><i class="fas fa-book"></i> 6 Etapas</span>
+                <span><i class="fas fa-clock"></i> ~1.5 anos</span>
             </div>
-             <div id="schedule-container">
-                <h3><i class="fas fa-calendar-alt"></i> Cronograma Sugerido (3 semanas por matéria)</h3>
-                <!-- O cronograma será inserido aqui -->
-            </div>
-        </div>
-
-        <!-- Dependency Tree View -->
-        <div id="dependency-view" class="hidden">
-             <!-- A árvore de dependências será inserida aqui -->
-        </div>
-    </main>
-
-    <!-- Pomodoro Timer Widget -->
-    <div id="pomodoro-widget">
-        <h4><i class="fas fa-clock"></i> Foco Produtivo</h4>
-        <div id="pomodoro-timer">25:00</div>
-        <div class="pomodoro-controls">
-            <button id="pomodoro-start"><i class="fas fa-play"></i></button>
-            <button id="pomodoro-pause"><i class="fas fa-pause"></i></button>
-            <button id="pomodoro-reset"><i class="fas fa-sync-alt"></i></button>
+            <button class="course-btn">
+                Começar Jornada <i class="fas fa-arrow-right"></i>
+            </button>
         </div>
     </div>
 
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 2rem;">
+        <p>Baseado no trabalho da <a href="https://github.com/Universidade-Livre" style="color: #27ae60;">Universidade Brasileira Livre</a></p>
+        <p style="margin-top: 0.5rem; opacity: 0.8;">Feito com ❤️ para democratizar a educação</p>
+    </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="data.js"></script>
+    <script>
+        function scrollToCourses() {
+            document.getElementById('courses-section').scrollIntoView({ behavior: 'smooth' });
+        }
 
-    <!-- Markdown & Syntax Highlighting for Chatbot -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
-    <script src="script.js"></script>
-
-    <!-- Chatbot Elements -->
-    <div id="chat-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3.49988 18.0264C3.49988 18.0264 5.37898 16.0682 9.00002 16.0682C12.621 16.0682 14.5 18.0264 14.5 18.0264M12.5 3.10058C16.0376 3.10058 18.909 5.97199 18.909 9.50962C18.909 13.0472 16.0376 15.9186 12.5 15.9186C11.5361 15.9186 10.6358 15.6888 9.83084 15.2854L5.61917 19.5002L6.11306 14.931C4.46914 13.7513 3.49988 11.7588 3.49988 9.50962C3.49988 5.97199 6.37129 3.10058 9.90909 3.10058C10.7482 3.10058 11.5432 3.29532 12.2393 3.64673C12.3323 3.69344 12.4182 3.73147 12.5 3.76135Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </div>
-    <div id="chat-window" class="hidden">
-        <div id="chat-header">
-            <h3>AI Tutor</h3>
-            <button id="close-chat">X</button>
-        </div>
-        <div id="chat-messages"></div>
-        <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Pergunte algo sobre C.C...">
-            <button id="send-chat-btn">Enviar</button>
-        </div>
-    </div>
+        function navigateToCourse(courseName) {
+            // Salva qual curso o usuário está acessando
+            localStorage.setItem('currentCourse', courseName);
+            window.location.href = `cursos/${courseName}/index.html`;
+        }
+    </script>
 </body>
 </html>

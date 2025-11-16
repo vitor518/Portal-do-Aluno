@@ -102,13 +102,43 @@ app.post('/chat', async (req, res) => {
   }
 
   try {
-    const system_prompt = `Você é um tutor especialista em Ciência da Computação para uma universidade livre brasileira. Seu nome é AI Tutor.
-    Sua missão é ajudar os alunos a entender conceitos complexos, depurar código e encontrar recursos de aprendizado.
-    Seja didático, amigável e use exemplos claros. Formate suas respostas com Markdown (use listas, negrito, etc.) e sempre que incluir código, use blocos de código formatados.
+    // Detecta qual curso está sendo usado
+const getCourseSpecificPrompt = (context) => {
+    if (context.includes('Matemática')) {
+        return `Você é um tutor especialista em MATEMÁTICA para uma universidade livre brasileira.
+        Seu nome é Math Tutor AI.
+        Sua missão é ajudar os alunos a entender conceitos de:
+        - Cálculo Diferencial e Integral
+        - Álgebra Linear
+        - Análise Real
+        - Topologia
+        - Equações Diferenciais
+        - Teoria dos Números
 
-    Contexto atual do aluno: ${context || 'Nenhum contexto fornecido.'}
+        Seja didático, use exemplos visuais quando possível (ASCII art),
+        e explique passo a passo. Quando apropriado, mostre demonstrações matemáticas.
+        Use LaTeX para fórmulas complexas entre $.
 
-    Responda a pergunta do aluno com base nesse contexto.`;
+        Contexto atual do aluno: ${context}`;
+    } else {
+        return `Você é um tutor especialista em CIÊNCIA DA COMPUTAÇÃO para uma universidade livre brasileira.
+        Seu nome é CS Tutor AI.
+        Sua missão é ajudar os alunos a entender conceitos de:
+        - Programação
+        - Algoritmos e Estruturas de Dados
+        - Redes de Computadores
+        - Banco de Dados
+        - Inteligência Artificial
+        - Sistemas Operacionais
+
+        Seja didático, amigável e use exemplos de código quando apropriado.
+        Formate suas respostas com Markdown.
+
+        Contexto atual do aluno: ${context}`;
+    }
+};
+
+const system_prompt = getCourseSpecificPrompt(context || 'Nenhum contexto fornecido.');
 
     const chat = model.startChat({
         history: history || [],

@@ -35,174 +35,73 @@ document.addEventListener('DOMContentLoaded', () => {
     const pomodoroPauseBtn = document.getElementById('pomodoro-pause');
     const pomodoroResetBtn = document.getElementById('pomodoro-reset');
 
-    // --- State ---
-    let courseProgress = {};
-    let earnedBadges = [];
+    // Configuração específica para Matemática
+    const courseName = 'matematica';
+
+    // DOM Elements (mesmos do curso de C.C.)
+    const dashboardView = document.getElementById('dashboard-view');
+    const courseView = document.getElementById('course-view');
+    const dependencyView = document.getElementById('dependency-view');
+    const courseViewTitle = document.getElementById('course-view-title');
+    const coursesGridContainer = document.getElementById('courses-grid-container');
+    const backToDashboardBtn = document.getElementById('back-to-dashboard');
+    const toggleViewBtn = document.getElementById('toggle-view-btn');
+    const scheduleContainer = document.getElementById('schedule-container');
+
+    // Pomodoro Elements
+    const pomodoroTimerEl = document.getElementById('pomodoro-timer');
+    const pomodoroStartBtn = document.getElementById('pomodoro-start');
+    const pomodoroPauseBtn = document.getElementById('pomodoro-pause');
+    const pomodoroResetBtn = document.getElementById('pomodoro-reset');
+
+    // State usando sistema unificado
+    let courseProgress = storage.getCourseProgress(courseName).progress || {};
+    let earnedBadges = storage.getCourseProgress(courseName).badges || [];
     let currentView = 'dashboard';
     let currentSemesterIndex = -1;
-    let userToken = localStorage.getItem('authToken');
-    let userEmail = localStorage.getItem('userEmail');
 
     // Pomodoro State
     let timerInterval;
-    let timerSeconds = 1500;
+    let timerSeconds = 1500; // 25 minutes
     let isTimerRunning = false;
 
-    const badges = [
-        "Iniciante em Computação", "Explorador de Estruturas", "Mestre dos Algoritmos",
-        "Arquiteto de Sistemas", "Engenheiro de Software", "Especialista em IA", "Cientista da Computação"
-    ];
-
-    // --- API Configuration ---
-    const API_BASE_URL = 'http://localhost:3000';
-
-    // --- Authentication Logic ---
-    const updateUIForAuthState = () => {
-        if (userToken) {
-            authButtons.classList.add('hidden');
-            userStatus.classList.remove('hidden');
-            userEmailEl.textContent = userEmail;
-        } else {
-            authButtons.classList.remove('hidden');
-            userStatus.classList.add('hidden');
-        }
-    };
-
-    const openModal = (isLogin = true) => {
-        authModal.classList.remove('hidden');
-        if (isLogin) {
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
-            showRegisterLink.classList.remove('hidden');
-            showLoginLink.classList.add('hidden');
-        } else {
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-            showRegisterLink.classList.add('hidden');
-            showLoginLink.classList.remove('hidden');
-        }
-    };
-
-    const closeModal = () => {
-        authModal.classList.add('hidden');
-    };
-
-    const handleLogout = () => {
-        userToken = null;
-        userEmail = null;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userEmail');
-        courseProgress = {}; // Reset progress
-        earnedBadges = [];
-        updateUIForAuthState();
-        renderDashboard(); // Re-render to show locked state
-    };
-
-    const handleLogin = async () => {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        loginErrorEl.textContent = '';
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-
-            userToken = data.token;
-            userEmail = email;
-            localStorage.setItem('authToken', userToken);
-            localStorage.setItem('userEmail', userEmail);
-
-            await loadProgressFromServer();
-            updateUIForAuthState();
-            closeModal();
-        } catch (err) {
-            loginErrorEl.textContent = err.message || 'Falha no login.';
-        }
-    };
-
-    const handleRegister = async () => {
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-        registerErrorEl.textContent = '';
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-
-            // Automatically log in the user after successful registration
-            await handleLoginAfterRegister(email, password);
-        } catch (err) {
-            registerErrorEl.textContent = err.message || 'Falha no cadastro.';
-        }
-    };
-
-    const handleLoginAfterRegister = async (email, password) => {
-        // A small trick to log in right after registering
-        document.getElementById('login-email').value = email;
-        document.getElementById('login-password').value = password;
-        await handleLogin();
-    };
-
     // --- State Management ---
-    const saveProgress = async () => {
-        localStorage.setItem('courseProgress', JSON.stringify(courseProgress));
-        localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+    const saveProgress = () => {
+        const data = storage.getData();
+        data.courses[courseName].progress = courseProgress;
+        data.courses[courseName].badges = earnedBadges;
+        storage.saveData(data);
+    };
 
-        if (userToken) {
-            try {
-                await fetch(`${API_BASE_URL}/api/progress`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${userToken}`
-                    },
-                    body: JSON.stringify({ progress: { courseProgress, earnedBadges } })
+    // --- Logic (igual ao C.C., só muda o array de badges) ---
+    const isCourseCompleted = (semesterIdx, courseIdx) => {
+        const courseId = `s${semesterIdx}-c${courseIdx}`;
+        return courseProgress[courseId] && courseProgress[courseId].main;
+    };
+
+    const isSemesterCompleted = (semesterIdx) => {
+        return semesters[semesterIdx].courses.every((_, courseIdx) =>
+            isCourseCompleted(semesterIdx, courseIdx)
+        );
+    };
+
+    const checkAndAwardBadges = () => {
+        semesters.forEach((_, semesterIdx) => {
+            if (isSemesterCompleted(semesterIdx) && !earnedBadges.includes(badges[semesterIdx])) {
+                earnedBadges.push(badges[semesterIdx]);
+                storage.addBadge(courseName, badges[semesterIdx]);
+
+                // Trigger confetti celebration
+                confetti({
+                    particleCount: 150,
+                    spread: 90,
+                    origin: { y: 0.6 }
                 });
-            } catch (error) {
-                console.error("Failed to sync progress with server:", error);
             }
-        }
+        });
+        saveProgress();
     };
 
-    const loadProgressFromServer = async () => {
-        if (!userToken) {
-             // Load from local storage if not logged in
-            courseProgress = JSON.parse(localStorage.getItem('courseProgress')) || {};
-            earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
-            renderDashboard();
-            return;
-        }
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/progress`, {
-                headers: { 'Authorization': `Bearer ${userToken}` }
-            });
-            if (!res.ok) throw new Error('Could not fetch progress.');
-
-            const serverProgress = await res.json();
-            courseProgress = serverProgress.courseProgress || {};
-            earnedBadges = serverProgress.earnedBadges || [];
-
-            // Save to local storage as well for offline use/caching
-            localStorage.setItem('courseProgress', JSON.stringify(courseProgress));
-            localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
-
-            renderDashboard();
-        } catch (error) {
-            console.error("Failed to load progress from server:", error);
-            handleLogout(); // Log out if token is invalid or server fails
-        }
-    };
 
     // --- Logic ---
     const isCourseCompleted = (semesterIdx, courseIdx) => {
@@ -469,16 +368,37 @@ document.addEventListener('DOMContentLoaded', () => {
         dependencyView.append(svg.node());
     };
 
-    // --- Event Listeners ---
-    // Auth listeners
-    loginBtn.addEventListener('click', () => openModal(true));
-    registerBtn.addEventListener('click', () => openModal(false));
-    closeModalBtn.addEventListener('click', closeModal);
-    showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); openModal(false); });
-    showLoginLink.addEventListener('click', (e) => { e.preventDefault(); openModal(true); });
-    loginSubmitBtn.addEventListener('click', handleLogin);
-    registerSubmitBtn.addEventListener('click', handleRegister);
-    logoutBtn.addEventListener('click', handleLogout);
+    // --- Pomodoro Logic ---
+    const updateTimerDisplay = () => {
+        const minutes = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+        const seconds = (timerSeconds % 60).toString().padStart(2, '0');
+        pomodoroTimerEl.textContent = `${minutes}:${seconds}`;
+    };
+
+    const startTimer = () => {
+        if (isTimerRunning) return;
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            updateTimerDisplay();
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert("Pomodoro concluído! Hora de uma pausa.");
+                isTimerRunning = false;
+            }
+        }, 1000);
+    };
+
+    const pauseTimer = () => {
+        isTimerRunning = false;
+        clearInterval(timerInterval);
+    };
+
+    const resetTimer = () => {
+        pauseTimer();
+        timerSeconds = 1500;
+        updateTimerDisplay();
+    };
 
     // App listeners
     backToDashboardBtn.addEventListener('click', showDashboard);
@@ -489,15 +409,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showDashboard();
         }
     });
+
     // Pomodoro Listeners
     pomodoroStartBtn.addEventListener('click', startTimer);
     pomodoroPauseBtn.addEventListener('click', pauseTimer);
     pomodoroResetBtn.addEventListener('click', resetTimer);
 
     // --- Initial Load ---
-    updateUIForAuthState();
-    loadProgressFromServer();
     updateTimerDisplay();
+    showDashboard();
 
     // --- Chatbot Logic ---
     const chatIcon = document.getElementById('chat-icon');

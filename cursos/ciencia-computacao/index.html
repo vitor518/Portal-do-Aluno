@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Aluno - Progressão Livre</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1>Portal do Aluno</h1>
+        <div class="header-tools">
+            <div id="user-status" class="hidden">
+                <span id="user-email"></span>
+                <button id="logout-btn" class="tool-btn-secondary">Logout</button>
+            </div>
+            <div id="auth-buttons">
+                <button id="login-btn" class="tool-btn">Login</button>
+                <button id="register-btn" class="tool-btn-secondary">Cadastro</button>
+            </div>
+            <button id="toggle-view-btn" class="tool-btn">
+                <i class="fas fa-project-diagram"></i> Ver Dependências
+            </button>
+        </div>
+    </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-btn">&times;</button>
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-submit-btn" class="modal-btn">Entrar</button>
+                <p id="login-error" class="error-message"></p>
+            </div>
+            <div id="register-form" class="hidden">
+                <h2>Cadastro</h2>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-submit-btn" class="modal-btn">Criar Conta</button>
+                <p id="register-error" class="error-message"></p>
+            </div>
+            <p class="form-switcher">
+                <a href="#" id="show-register-form">Não tem uma conta? Cadastre-se</a>
+                <a href="#" id="show-login-form" class="hidden">Já tem uma conta? Faça login</a>
+            </p>
+        </div>
+    </div>
+
+    <main id="app-container">
+        <!-- Dashboard View: Mostra os cards de Etapa -->
+        <div id="dashboard-view">
+            <!-- Os cards de semestre serão inseridos aqui -->
+        </div>
+
+        <!-- Course View: Mostra os cards de Curso de uma Etapa específica -->
+        <div id="course-view" class="hidden">
+            <button id="back-to-dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
+            <h2 id="course-view-title"></h2>
+            <div id="courses-grid-container">
+                <!-- Os cards de curso serão inseridos aqui -->
+            </div>
+             <div id="schedule-container">
+                <h3><i class="fas fa-calendar-alt"></i> Cronograma Sugerido (3 semanas por matéria)</h3>
+                <!-- O cronograma será inserido aqui -->
+            </div>
+        </div>
+
+        <!-- Dependency Tree View -->
+        <div id="dependency-view" class="hidden">
+             <!-- A árvore de dependências será inserida aqui -->
+        </div>
+    </main>
+
+    <!-- Pomodoro Timer Widget -->
+    <div id="pomodoro-widget">
+        <h4><i class="fas fa-clock"></i> Foco Produtivo</h4>
+        <div id="pomodoro-timer">25:00</div>
+        <div class="pomodoro-controls">
+            <button id="pomodoro-start"><i class="fas fa-play"></i></button>
+            <button id="pomodoro-pause"><i class="fas fa-pause"></i></button>
+            <button id="pomodoro-reset"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="../../shared/scripts/storage.js"></script>
+    <script src="data.js"></script>
+
+    <!-- Markdown & Syntax Highlighting for Chatbot -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <script src="script.js"></script>
+
+    <!-- Chatbot Elements -->
+    <div id="chat-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.49988 18.0264C3.49988 18.0264 5.37898 16.0682 9.00002 16.0682C12.621 16.0682 14.5 18.0264 14.5 18.0264M12.5 3.10058C16.0376 3.10058 18.909 5.97199 18.909 9.50962C18.909 13.0472 16.0376 15.9186 12.5 15.9186C11.5361 15.9186 10.6358 15.6888 9.83084 15.2854L5.61917 19.5002L6.11306 14.931C4.46914 13.7513 3.49988 11.7588 3.49988 9.50962C3.49988 5.97199 6.37129 3.10058 9.90909 3.10058C10.7482 3.10058 11.5432 3.29532 12.2393 3.64673C12.3323 3.69344 12.4182 3.73147 12.5 3.76135Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <div id="chat-window" class="hidden">
+        <div id="chat-header">
+            <h3>AI Tutor</h3>
+            <button id="close-chat">X</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Pergunte algo sobre C.C...">
+            <button id="send-chat-btn">Enviar</button>
+        </div>
+    </div>
+</body>
+</html>
