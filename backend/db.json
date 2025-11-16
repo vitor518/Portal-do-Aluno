@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "id": "1763257263301",
+      "email": "testuser_1763257262@example.com",
+      "password": "$2b$10$D6jBqzE2JDJxe1RZtQhEiexKNQNHYY.d2x10F3hPjeeplrfSM07kG",
+      "progress": {
+        "courseProgress": {},
+        "earnedBadges": []
+      }
+    }
+  ]
+}

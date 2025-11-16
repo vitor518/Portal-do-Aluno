@@ -12,12 +12,88 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize Google Generative AI
-// Make sure to have GEMINI_API_KEY in your .env file
+// Initialize Google Generative AI & other dependencies
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const low = require('lowdb');
+const FileSync = require('lowdb/adapters/FileSync');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-// API endpoint to handle chat requests
+// Setup lowdb
+const adapter = new FileSync('db.json');
+const db = low(adapter);
+db.defaults({ users: [] }).write();
+
+// Secret key for JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'a-very-secret-key-that-should-be-in-env';
+
+
+// --- User Authentication API ---
+
+// Register a new user
+app.post('/api/register', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    const existingUser = db.get('users').find({ email }).value();
+    if (existingUser) {
+        return res.status(400).json({ error: 'User with this email already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = { id: Date.now().toString(), email, password: hashedPassword, progress: {} };
+
+    db.get('users').push(user).write();
+    res.status(201).json({ message: 'User registered successfully.' });
+});
+
+// Login a user
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = db.get('users').find({ email }).value();
+
+    if (!user || !await bcrypt.compare(password, user.password)) {
+        return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token });
+});
+
+
+// --- Middleware for token verification ---
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+};
+
+// --- Progress Sync API ---
+
+// Get user progress
+app.get('/api/progress', authenticateToken, (req, res) => {
+    const user = db.get('users').find({ id: req.user.userId }).value();
+    res.json(user.progress || {});
+});
+
+// Save user progress
+app.post('/api/progress', authenticateToken, (req, res) => {
+    const { progress } = req.body;
+    db.get('users').find({ id: req.user.userId }).assign({ progress }).write();
+    res.json({ message: 'Progress saved successfully.' });
+});
+
+
+// --- AI Tutor Chat API ---
 app.post('/chat', async (req, res) => {
   const { message, history, context } = req.body;
 

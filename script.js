@@ -1,13 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
+    // --- DOM Elements ---
+    // Views
     const dashboardView = document.getElementById('dashboard-view');
     const courseView = document.getElementById('course-view');
     const dependencyView = document.getElementById('dependency-view');
+    // Common
     const courseViewTitle = document.getElementById('course-view-title');
     const coursesGridContainer = document.getElementById('courses-grid-container');
     const backToDashboardBtn = document.getElementById('back-to-dashboard');
     const toggleViewBtn = document.getElementById('toggle-view-btn');
     const scheduleContainer = document.getElementById('schedule-container');
+
+    // Auth Elements
+    const authModal = document.getElementById('auth-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const showRegisterLink = document.getElementById('show-register-form');
+    const showLoginLink = document.getElementById('show-login-form');
+    const loginSubmitBtn = document.getElementById('login-submit-btn');
+    const registerSubmitBtn = document.getElementById('register-submit-btn');
+    const loginErrorEl = document.getElementById('login-error');
+    const registerErrorEl = document.getElementById('register-error');
+    const authButtons = document.getElementById('auth-buttons');
+    const userStatus = document.getElementById('user-status');
+    const userEmailEl = document.getElementById('user-email');
+    const logoutBtn = document.getElementById('logout-btn');
 
     // Pomodoro Elements
     const pomodoroTimerEl = document.getElementById('pomodoro-timer');
@@ -15,15 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const pomodoroPauseBtn = document.getElementById('pomodoro-pause');
     const pomodoroResetBtn = document.getElementById('pomodoro-reset');
 
-    // State
-    let courseProgress = JSON.parse(localStorage.getItem('courseProgress')) || {};
-    let earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
+    // --- State ---
+    let courseProgress = {};
+    let earnedBadges = [];
     let currentView = 'dashboard';
-    let currentSemesterIndex = -1; // -1 means dashboard
+    let currentSemesterIndex = -1;
+    let userToken = localStorage.getItem('authToken');
+    let userEmail = localStorage.getItem('userEmail');
 
     // Pomodoro State
     let timerInterval;
-    let timerSeconds = 1500; // 25 minutes
+    let timerSeconds = 1500;
     let isTimerRunning = false;
 
     const badges = [
@@ -31,10 +53,155 @@ document.addEventListener('DOMContentLoaded', () => {
         "Arquiteto de Sistemas", "Engenheiro de Software", "Especialista em IA", "Cientista da Computação"
     ];
 
+    // --- API Configuration ---
+    const API_BASE_URL = 'http://localhost:3000';
+
+    // --- Authentication Logic ---
+    const updateUIForAuthState = () => {
+        if (userToken) {
+            authButtons.classList.add('hidden');
+            userStatus.classList.remove('hidden');
+            userEmailEl.textContent = userEmail;
+        } else {
+            authButtons.classList.remove('hidden');
+            userStatus.classList.add('hidden');
+        }
+    };
+
+    const openModal = (isLogin = true) => {
+        authModal.classList.remove('hidden');
+        if (isLogin) {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            showRegisterLink.classList.remove('hidden');
+            showLoginLink.classList.add('hidden');
+        } else {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            showRegisterLink.classList.add('hidden');
+            showLoginLink.classList.remove('hidden');
+        }
+    };
+
+    const closeModal = () => {
+        authModal.classList.add('hidden');
+    };
+
+    const handleLogout = () => {
+        userToken = null;
+        userEmail = null;
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+        courseProgress = {}; // Reset progress
+        earnedBadges = [];
+        updateUIForAuthState();
+        renderDashboard(); // Re-render to show locked state
+    };
+
+    const handleLogin = async () => {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        loginErrorEl.textContent = '';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            userToken = data.token;
+            userEmail = email;
+            localStorage.setItem('authToken', userToken);
+            localStorage.setItem('userEmail', userEmail);
+
+            await loadProgressFromServer();
+            updateUIForAuthState();
+            closeModal();
+        } catch (err) {
+            loginErrorEl.textContent = err.message || 'Falha no login.';
+        }
+    };
+
+    const handleRegister = async () => {
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        registerErrorEl.textContent = '';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            // Automatically log in the user after successful registration
+            await handleLoginAfterRegister(email, password);
+        } catch (err) {
+            registerErrorEl.textContent = err.message || 'Falha no cadastro.';
+        }
+    };
+
+    const handleLoginAfterRegister = async (email, password) => {
+        // A small trick to log in right after registering
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = password;
+        await handleLogin();
+    };
+
     // --- State Management ---
-    const saveProgress = () => {
+    const saveProgress = async () => {
         localStorage.setItem('courseProgress', JSON.stringify(courseProgress));
         localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+
+        if (userToken) {
+            try {
+                await fetch(`${API_BASE_URL}/api/progress`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userToken}`
+                    },
+                    body: JSON.stringify({ progress: { courseProgress, earnedBadges } })
+                });
+            } catch (error) {
+                console.error("Failed to sync progress with server:", error);
+            }
+        }
+    };
+
+    const loadProgressFromServer = async () => {
+        if (!userToken) {
+             // Load from local storage if not logged in
+            courseProgress = JSON.parse(localStorage.getItem('courseProgress')) || {};
+            earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
+            renderDashboard();
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/progress`, {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            });
+            if (!res.ok) throw new Error('Could not fetch progress.');
+
+            const serverProgress = await res.json();
+            courseProgress = serverProgress.courseProgress || {};
+            earnedBadges = serverProgress.earnedBadges || [];
+
+            // Save to local storage as well for offline use/caching
+            localStorage.setItem('courseProgress', JSON.stringify(courseProgress));
+            localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+
+            renderDashboard();
+        } catch (error) {
+            console.error("Failed to load progress from server:", error);
+            handleLogout(); // Log out if token is invalid or server fails
+        }
     };
 
     // --- Logic ---
@@ -51,12 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         semesters.forEach((_, semesterIdx) => {
             if (isSemesterCompleted(semesterIdx) && !earnedBadges.includes(badges[semesterIdx])) {
                 earnedBadges.push(badges[semesterIdx]);
-                // Trigger confetti celebration
-                confetti({
-                    particleCount: 150,
-                    spread: 90,
-                    origin: { y: 0.6 }
-                });
+                confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
             }
         });
         saveProgress();
@@ -72,50 +234,39 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'semester-card';
             card.dataset.semesterIndex = semesterIdx;
 
-            let icon = '', statusText = '', stateClass = '';
-
+            let stateClass = '';
             const semesterCompleted = isSemesterCompleted(semesterIdx);
 
             if (semesterCompleted) {
-                icon = '<i class="fas fa-check-circle"></i>';
-                statusText = '100% Concluído';
                 stateClass = 'completed';
             } else if (isPreviousSemesterCompleted) {
-                icon = '<i class="fas fa-rocket"></i>';
-                statusText = 'Iniciar / Continuar';
                 stateClass = 'active';
-
-                // Check if it was previously locked to add unlock animation
-                const wasLocked = card.classList.contains('locked');
-                if(wasLocked) {
-                    card.classList.add('newly-unlocked');
-                }
-
                 isPreviousSemesterCompleted = false;
             } else {
-                icon = '<i class="fas fa-lock"></i>';
-                statusText = 'Bloqueado';
                 stateClass = 'locked';
             }
 
             card.classList.add(stateClass);
-            const completedCourses = semester.courses.filter((_, courseIdx) => isCourseCompleted(semesterIdx, courseIdx)).length;
-            const totalCourses = semester.courses.length;
-            const progressPercentage = totalCourses > 0 ? (completedCourses / totalCourses) * 100 : 0;
+
+            const courseListHTML = semester.courses.map((course, courseIdx) => {
+                const isCompleted = isCourseCompleted(semesterIdx, courseIdx);
+                return `<li class="${isCompleted ? 'completed-course' : ''}">${course.title}</li>`;
+            }).join('');
 
             card.innerHTML = `
-                <h2>${semester.semester}ª Etapa</h2>
-                <div class="status-icon">${icon}</div>
-                <p class="status-text">${statusText}</p>
-                ${(stateClass === 'completed' && earnedBadges.includes(badges[semesterIdx])) ? `<div class="badge-award"><i class="fas fa-medal"></i> ${badges[semesterIdx]}</div>` : ''}
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: ${progressPercentage}%;"></div>
+                <div class="semester-header">
+                    <h2>${semester.semester}ª Etapa</h2>
+                    <span class="status-indicator">${stateClass === 'completed' ? '✓' : (stateClass === 'locked' ? '🔒' : '▶')}</span>
                 </div>
+                <ul class="course-list">${courseListHTML}</ul>
             `;
 
             if (stateClass !== 'locked') {
-                card.addEventListener('click', () => showCourseView(semesterIdx));
+                card.addEventListener('click', () => {
+                    showCourseView(semesterIdx);
+                });
             }
+
             dashboardView.appendChild(card);
         });
         checkAndAwardBadges();
@@ -227,17 +378,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTimerDisplay();
     };
 
-    pomodoroStartBtn.addEventListener('click', startTimer);
-    pomodoroPauseBtn.addEventListener('click', pauseTimer);
-    pomodoroResetBtn.addEventListener('click', resetTimer);
-
     // --- View Switching ---
     const showDashboard = () => {
         dashboardView.classList.remove('hidden');
         courseView.classList.add('hidden');
         dependencyView.classList.add('hidden');
         currentView = 'dashboard';
-        currentSemesterIndex = -1; // Reset context when back to dashboard
+        currentSemesterIndex = -1;
         toggleViewBtn.innerHTML = '<i class="fas fa-project-diagram"></i> Ver Dependências';
         renderDashboard();
     };
@@ -246,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardView.classList.add('hidden');
         courseView.classList.remove('hidden');
         dependencyView.classList.add('hidden');
-        currentSemesterIndex = semesterIdx; // Set context to the current semester
+        currentSemesterIndex = semesterIdx;
         renderCourseView(semesterIdx);
     };
 
@@ -261,119 +408,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderDependencyGraph = () => {
         dependencyView.innerHTML = '<h2>Árvore de Dependências</h2>';
-
         const nodes = [];
         const links = [];
         const courseMap = new Map();
-
-        semesters.forEach((semester) => {
-            semester.courses.forEach((course) => {
-                const courseTitle = course.title;
-                if (!courseMap.has(courseTitle)) {
-                    nodes.push({ id: courseTitle, group: semester.semester });
-                    courseMap.set(courseTitle, courseTitle);
+        semesters.forEach(semester => {
+            semester.courses.forEach(course => {
+                if (!courseMap.has(course.title)) {
+                    nodes.push({ id: course.title, group: semester.semester });
+                    courseMap.set(course.title, course.title);
                 }
             });
         });
-
         const allCourseTitles = new Set(nodes.map(n => n.id));
-
-        semesters.forEach((semester) => {
-            semester.courses.forEach((course) => {
-                const courseTitle = course.title;
+        semesters.forEach(semester => {
+            semester.courses.forEach(course => {
                 if (course.prerequisites && course.prerequisites !== "N/A") {
                     const prereqs = course.prerequisites.split(',').map(p => p.trim());
                     prereqs.forEach(prereq => {
-                        // Find the full title of the prerequisite
                         const foundPrereq = Array.from(allCourseTitles).find(title => title.includes(prereq));
                         if (foundPrereq) {
-                            links.push({ source: foundPrereq, target: courseTitle });
+                            links.push({ source: foundPrereq, target: course.title });
                         }
                     });
                 }
             });
         });
-
         const width = dependencyView.clientWidth || 1200;
         const height = 800;
-
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(120))
             .force("charge", d3.forceManyBody().strength(-200))
             .force("center", d3.forceCenter(width / 2, height / 2.5));
-
-        const svg = d3.create("svg")
-            .attr("viewBox", [0, 0, width, height]);
-
-        const link = svg.append("g")
-            .attr("stroke", "#999")
-            .attr("stroke-opacity", 0.6)
-            .selectAll("line")
-            .data(links)
-            .join("line")
-            .attr("stroke-width", 1.5);
-
-        const node = svg.append("g")
-            .selectAll("g")
-            .data(nodes)
-            .join("g")
-            .call(drag(simulation));
-
-        node.append("circle")
-            .attr("r", 12)
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 1.5)
-            .attr("fill", d => d3.schemeCategory10[d.group % 10]);
-
-        node.append("text")
-            .attr("x", 18)
-            .attr("y", "0.31em")
-            .text(d => d.id)
-            .attr("font-size", "12px")
-            .attr("fill", "#333");
-
-        node.append("title")
-            .text(d => d.id);
-
+        const svg = d3.create("svg").attr("viewBox", [0, 0, width, height]);
+        const link = svg.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6).selectAll("line").data(links).join("line").attr("stroke-width", 1.5);
+        const node = svg.append("g").selectAll("g").data(nodes).join("g").call(drag(simulation));
+        node.append("circle").attr("r", 12).attr("stroke", "#fff").attr("stroke-width", 1.5).attr("fill", d => d3.schemeCategory10[d.group % 10]);
+        node.append("text").attr("x", 18).attr("y", "0.31em").text(d => d.id).attr("font-size", "12px").attr("fill", "#333");
+        node.append("title").text(d => d.id);
         simulation.on("tick", () => {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
-
-            node
-                .attr("transform", d => `translate(${d.x},${d.y})`);
+            link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
-
         function drag(simulation) {
           function dragstarted(event, d) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
           }
-
           function dragged(event, d) {
             d.fx = event.x;
             d.fy = event.y;
           }
-
           function dragended(event, d) {
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
           }
-
-          return d3.drag()
-              .on("start", dragstarted)
-              .on("drag", dragged)
-              .on("end", dragended);
+          return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
         }
-
         dependencyView.append(svg.node());
     };
 
     // --- Event Listeners ---
+    // Auth listeners
+    loginBtn.addEventListener('click', () => openModal(true));
+    registerBtn.addEventListener('click', () => openModal(false));
+    closeModalBtn.addEventListener('click', closeModal);
+    showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); openModal(false); });
+    showLoginLink.addEventListener('click', (e) => { e.preventDefault(); openModal(true); });
+    loginSubmitBtn.addEventListener('click', handleLogin);
+    registerSubmitBtn.addEventListener('click', handleRegister);
+    logoutBtn.addEventListener('click', handleLogout);
+
+    // App listeners
     backToDashboardBtn.addEventListener('click', showDashboard);
     toggleViewBtn.addEventListener('click', () => {
         if (currentView === 'dashboard') {
@@ -382,10 +489,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showDashboard();
         }
     });
+    // Pomodoro Listeners
+    pomodoroStartBtn.addEventListener('click', startTimer);
+    pomodoroPauseBtn.addEventListener('click', pauseTimer);
+    pomodoroResetBtn.addEventListener('click', resetTimer);
 
     // --- Initial Load ---
+    updateUIForAuthState();
+    loadProgressFromServer();
     updateTimerDisplay();
-    showDashboard();
 
     // --- Chatbot Logic ---
     const chatIcon = document.getElementById('chat-icon');
@@ -394,10 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendChatBtn = document.getElementById('send-chat-btn');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
-
     let chatHistory = [];
     let isChatInitiated = false;
-
     const toggleChatWindow = () => {
         chatWindow.classList.toggle('hidden');
         if (!chatWindow.classList.contains('hidden') && !isChatInitiated) {
@@ -405,13 +515,10 @@ document.addEventListener('DOMContentLoaded', () => {
             isChatInitiated = true;
         }
     };
-
     const addMessageToUI = (message, sender) => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message', `${sender}-message`);
-
         if (sender === 'ai') {
-            // Use marked to parse Markdown and highlight.js for code blocks
             messageElement.innerHTML = marked.parse(message);
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
@@ -419,30 +526,23 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             messageElement.textContent = message;
         }
-
         chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     };
-
     const showWelcomeMessage = () => {
         const welcomeText = "Olá! 👋 Sou seu tutor de IA. Como posso ajudar com seus estudos de Ciência da Computação hoje? Você pode me pedir para explicar um conceito, depurar um código ou sugerir recursos.";
         addMessageToUI(welcomeText, 'ai');
     };
-
     const handleSendMessage = async () => {
         const message = chatInput.value.trim();
         if (!message) return;
-
         addMessageToUI(message, 'user');
         chatInput.value = '';
-
-        // Add a "typing" indicator for the AI
         const typingIndicator = document.createElement('div');
         typingIndicator.classList.add('chat-message', 'ai-message', 'typing-indicator');
         typingIndicator.innerHTML = '<span>.</span><span>.</span><span>.</span>';
         chatMessages.appendChild(typingIndicator);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
         try {
             let context = "O aluno está na página principal do portal.";
             if (currentSemesterIndex !== -1) {
@@ -450,46 +550,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const courseTitles = semester.courses.map(c => c.title).join(', ');
                 context = `O aluno está visualizando a ${semester.semester}ª Etapa, que inclui os cursos: ${courseTitles}.`;
             }
-
-            const response = await fetch('http://localhost:3000/chat', {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: message,
-                    history: chatHistory,
-                    context: context // Sending the context
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, history: chatHistory, context })
             });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok.');
-            }
-
+            if (!response.ok) throw new Error('Network response was not ok.');
             const data = await response.json();
-
-            // Update chat history
             chatHistory.push({ role: "user", parts: message });
             chatHistory.push({ role: "model", parts: data.reply });
-
-            // Remove "typing" indicator and add AI's actual message
             chatMessages.removeChild(typingIndicator);
             addMessageToUI(data.reply, 'ai');
-
         } catch (error) {
             console.error('Error sending message:', error);
             chatMessages.removeChild(typingIndicator);
             addMessageToUI('Desculpe, não consegui me conectar ao meu cérebro. Tente novamente.', 'ai');
         }
     };
-
     chatIcon.addEventListener('click', toggleChatWindow);
     closeChatBtn.addEventListener('click', toggleChatWindow);
     sendChatBtn.addEventListener('click', handleSendMessage);
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSendMessage();
-        }
+        if (e.key === 'Enter') handleSendMessage();
     });
 });

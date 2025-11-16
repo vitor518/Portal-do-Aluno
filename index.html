@@ -11,11 +11,44 @@
     <header class="main-header">
         <h1>Portal do Aluno</h1>
         <div class="header-tools">
+            <div id="user-status" class="hidden">
+                <span id="user-email"></span>
+                <button id="logout-btn" class="tool-btn-secondary">Logout</button>
+            </div>
+            <div id="auth-buttons">
+                <button id="login-btn" class="tool-btn">Login</button>
+                <button id="register-btn" class="tool-btn-secondary">Cadastro</button>
+            </div>
             <button id="toggle-view-btn" class="tool-btn">
                 <i class="fas fa-project-diagram"></i> Ver Dependências
             </button>
         </div>
     </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-btn">&times;</button>
+            <div id="login-form">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button id="login-submit-btn" class="modal-btn">Entrar</button>
+                <p id="login-error" class="error-message"></p>
+            </div>
+            <div id="register-form" class="hidden">
+                <h2>Cadastro</h2>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button id="register-submit-btn" class="modal-btn">Criar Conta</button>
+                <p id="register-error" class="error-message"></p>
+            </div>
+            <p class="form-switcher">
+                <a href="#" id="show-register-form">Não tem uma conta? Cadastre-se</a>
+                <a href="#" id="show-login-form" class="hidden">Já tem uma conta? Faça login</a>
+            </p>
+        </div>
+    </div>
 
     <main id="app-container">
         <!-- Dashboard View: Mostra os cards de Etapa -->
