@@ -57,6 +57,30 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="data.js"></script>
+
+    <!-- Markdown & Syntax Highlighting for Chatbot -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <script src="script.js"></script>
+
+    <!-- Chatbot Elements -->
+    <div id="chat-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.49988 18.0264C3.49988 18.0264 5.37898 16.0682 9.00002 16.0682C12.621 16.0682 14.5 18.0264 14.5 18.0264M12.5 3.10058C16.0376 3.10058 18.909 5.97199 18.909 9.50962C18.909 13.0472 16.0376 15.9186 12.5 15.9186C11.5361 15.9186 10.6358 15.6888 9.83084 15.2854L5.61917 19.5002L6.11306 14.931C4.46914 13.7513 3.49988 11.7588 3.49988 9.50962C3.49988 5.97199 6.37129 3.10058 9.90909 3.10058C10.7482 3.10058 11.5432 3.29532 12.2393 3.64673C12.3323 3.69344 12.4182 3.73147 12.5 3.76135Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <div id="chat-window" class="hidden">
+        <div id="chat-header">
+            <h3>AI Tutor</h3>
+            <button id="close-chat">X</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Pergunte algo sobre C.C...">
+            <button id="send-chat-btn">Enviar</button>
+        </div>
+    </div>
 </body>
 </html>
