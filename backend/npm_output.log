@@ -2,5 +2,5 @@
 > backend@1.0.0 start
 > node server.js
 
-[dotenv@17.2.3] injecting env (1) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (1) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
 Server is running at http://localhost:3000
