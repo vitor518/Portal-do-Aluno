@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let courseProgress = JSON.parse(localStorage.getItem('courseProgress')) || {};
     let earnedBadges = JSON.parse(localStorage.getItem('earnedBadges')) || [];
     let currentView = 'dashboard';
+    let currentSemesterIndex = -1; // -1 means dashboard
 
     // Pomodoro State
     let timerInterval;
@@ -236,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         courseView.classList.add('hidden');
         dependencyView.classList.add('hidden');
         currentView = 'dashboard';
+        currentSemesterIndex = -1; // Reset context when back to dashboard
         toggleViewBtn.innerHTML = '<i class="fas fa-project-diagram"></i> Ver Dependências';
         renderDashboard();
     };
@@ -244,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardView.classList.add('hidden');
         courseView.classList.remove('hidden');
         dependencyView.classList.add('hidden');
+        currentSemesterIndex = semesterIdx; // Set context to the current semester
         renderCourseView(semesterIdx);
     };
 
@@ -383,4 +386,110 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial Load ---
     updateTimerDisplay();
     showDashboard();
+
+    // --- Chatbot Logic ---
+    const chatIcon = document.getElementById('chat-icon');
+    const chatWindow = document.getElementById('chat-window');
+    const closeChatBtn = document.getElementById('close-chat');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    let chatHistory = [];
+    let isChatInitiated = false;
+
+    const toggleChatWindow = () => {
+        chatWindow.classList.toggle('hidden');
+        if (!chatWindow.classList.contains('hidden') && !isChatInitiated) {
+            showWelcomeMessage();
+            isChatInitiated = true;
+        }
+    };
+
+    const addMessageToUI = (message, sender) => {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message', `${sender}-message`);
+
+        if (sender === 'ai') {
+            // Use marked to parse Markdown and highlight.js for code blocks
+            messageElement.innerHTML = marked.parse(message);
+            messageElement.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        } else {
+            messageElement.textContent = message;
+        }
+
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+    };
+
+    const showWelcomeMessage = () => {
+        const welcomeText = "Olá! 👋 Sou seu tutor de IA. Como posso ajudar com seus estudos de Ciência da Computação hoje? Você pode me pedir para explicar um conceito, depurar um código ou sugerir recursos.";
+        addMessageToUI(welcomeText, 'ai');
+    };
+
+    const handleSendMessage = async () => {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addMessageToUI(message, 'user');
+        chatInput.value = '';
+
+        // Add a "typing" indicator for the AI
+        const typingIndicator = document.createElement('div');
+        typingIndicator.classList.add('chat-message', 'ai-message', 'typing-indicator');
+        typingIndicator.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+        chatMessages.appendChild(typingIndicator);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            let context = "O aluno está na página principal do portal.";
+            if (currentSemesterIndex !== -1) {
+                const semester = semesters[currentSemesterIndex];
+                const courseTitles = semester.courses.map(c => c.title).join(', ');
+                context = `O aluno está visualizando a ${semester.semester}ª Etapa, que inclui os cursos: ${courseTitles}.`;
+            }
+
+            const response = await fetch('http://localhost:3000/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: chatHistory,
+                    context: context // Sending the context
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+
+            const data = await response.json();
+
+            // Update chat history
+            chatHistory.push({ role: "user", parts: message });
+            chatHistory.push({ role: "model", parts: data.reply });
+
+            // Remove "typing" indicator and add AI's actual message
+            chatMessages.removeChild(typingIndicator);
+            addMessageToUI(data.reply, 'ai');
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            chatMessages.removeChild(typingIndicator);
+            addMessageToUI('Desculpe, não consegui me conectar ao meu cérebro. Tente novamente.', 'ai');
+        }
+    };
+
+    chatIcon.addEventListener('click', toggleChatWindow);
+    closeChatBtn.addEventListener('click', toggleChatWindow);
+    sendChatBtn.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
+        }
+    });
 });
