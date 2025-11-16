@@ -3,19 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBL - Trilha de Estudos</title>
+    <title>Portal do Aluno - Progressão Livre</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Ciência da Computação - Universidade Brasileira Livre</h1>
+    <header class="main-header">
+        <h1>Portal do Aluno</h1>
+        <div class="header-tools">
+            <button id="toggle-view-btn" class="tool-btn">
+                <i class="fas fa-project-diagram"></i> Ver Dependências
+            </button>
+        </div>
     </header>
-    <main id="semesters-container">
-        <!-- Os semestres e cursos serão inseridos aqui via JavaScript -->
+
+    <main id="app-container">
+        <!-- Dashboard View: Mostra os cards de Etapa -->
+        <div id="dashboard-view">
+            <!-- Os cards de semestre serão inseridos aqui -->
+        </div>
+
+        <!-- Course View: Mostra os cards de Curso de uma Etapa específica -->
+        <div id="course-view" class="hidden">
+            <button id="back-to-dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
+            <h2 id="course-view-title"></h2>
+            <div id="courses-grid-container">
+                <!-- Os cards de curso serão inseridos aqui -->
+            </div>
+             <div id="schedule-container">
+                <h3><i class="fas fa-calendar-alt"></i> Cronograma Sugerido (3 semanas por matéria)</h3>
+                <!-- O cronograma será inserido aqui -->
+            </div>
+        </div>
+
+        <!-- Dependency Tree View -->
+        <div id="dependency-view" class="hidden">
+             <!-- A árvore de dependências será inserida aqui -->
+        </div>
     </main>
-    <footer>
-        <p>Adaptado do repositório da <a href="https://github.com/Universidade-Livre/ciencia-da-computacao" target="_blank">Universidade Brasileira Livre</a></p>
-    </footer>
+
+    <!-- Pomodoro Timer Widget -->
+    <div id="pomodoro-widget">
+        <h4><i class="fas fa-clock"></i> Foco Produtivo</h4>
+        <div id="pomodoro-timer">25:00</div>
+        <div class="pomodoro-controls">
+            <button id="pomodoro-start"><i class="fas fa-play"></i></button>
+            <button id="pomodoro-pause"><i class="fas fa-pause"></i></button>
+            <button id="pomodoro-reset"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="data.js"></script>
     <script src="script.js"></script>
 </body>

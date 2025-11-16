@@ -1,13 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --background-color: #ecf0f1;
-    --card-background: #ffffff;
-    --text-color: #34495e;
-    --locked-color: #bdc3c7;
-    --border-color: #dfe6e9;
+    --bg-color: #F9F9F9;
+    --text-color: #1a1a1a;
+    --primary-color: #007BFF;
+    --card-bg: #FFFFFF;
+    --border-color: #E0E0E0;
+    --locked-bg: #F2F2F2;
+    --locked-text: #BDBDBD;
+    --completed-bg: #f0f8ff;
+    --completed-icon: #0056b3;
 }
 
 * {
@@ -17,155 +19,249 @@
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--background-color);
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
     color: var(--text-color);
-    line-height: 1.6;
 }
 
-header {
+.main-header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.main-header h1 {
+    font-size: 1.5rem;
+}
+
+.tool-btn, .back-btn {
     background: var(--primary-color);
-    color: var(--card-background);
-    padding: 1.5rem 0;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: background 0.2s;
 }
 
-header h1 {
-    font-weight: 300;
+.tool-btn:hover, .back-btn:hover {
+    background: var(--completed-icon);
 }
 
-main {
-    padding: 2rem 1rem;
-}
-
-#semesters-container {
-    max-width: 1200px;
+#app-container {
+    padding: 2rem;
+    max-width: 1400px;
     margin: 0 auto;
+}
+
+#dashboard-view {
     display: grid;
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
 .semester-card {
-    background: var(--card-background);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.semester-card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.semester-card .status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.semester-card .status-text {
+    font-weight: 600;
+}
+
+/* --- Card States --- */
+.semester-card.active {
+    border-left: 5px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+}
+
+.semester-card.completed {
+    background: var(--completed-bg);
+    border-color: #cce7ff;
+}
+.semester-card.completed .status-icon {
+    color: var(--primary-color);
+}
+.semester-card.completed .status-text {
+    color: var(--completed-icon);
 }
 
 .semester-card.locked {
-    background-color: #f5f5f5;
-    opacity: 0.6;
-    pointer-events: none;
+    background: var(--locked-bg);
+    border-color: #E0E0E0;
+    color: var(--locked-text);
+    cursor: not-allowed;
+}
+.semester-card.locked .status-icon {
+    color: var(--locked-text);
 }
 
-.semester-card.locked .semester-title {
-    color: var(--locked-color);
+.badge-award {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--completed-icon);
+    background-color: #e6f3ff;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    display: inline-block;
 }
 
 
-.semester-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0.5rem;
+/* --- Course View --- */
+#course-view {
+    padding: 1rem;
 }
 
-.courses-grid {
+.back-btn {
+    margin-bottom: 2rem;
+}
+
+#course-view-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+#courses-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
 }
 
 .course-card {
-    background: #fafafa;
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 1.5rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex-direction: column;
 }
 
-.course-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-}
-
-.course-info a {
+.course-card h3 a {
     text-decoration: none;
-    color: var(--secondary-color);
-    font-weight: 700;
-    font-size: 1.1rem;
-}
-
-.course-info a:hover {
-    text-decoration: underline;
+    color: var(--primary-color);
+    font-size: 1.2rem;
 }
 
 .course-prerequisites {
     font-size: 0.8rem;
-    color: #7f8c8d;
-    margin-top: 5px;
+    color: #888;
+    margin: 0.5rem 0 1.5rem 0;
 }
 
-.completion-checkbox {
+.checklist {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.checklist label {
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    width: 25px;
-    height: 25px;
-    -webkit-appearance: none;
-    appearance: none;
-    background-color: var(--background-color);
-    border: 2px solid var(--border-color);
+}
+
+.checklist input {
+    margin-right: 0.8rem;
+    width: 18px;
+    height: 18px;
+}
+
+.notes-container {
+    margin-top: 1.5rem;
+}
+
+.quick-notes {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
-    position: relative;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.completion-checkbox:checked {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
-}
-
-.completion-checkbox:checked::after {
-    content: '✔';
-    color: white;
-    font-size: 18px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-footer {
-    text-align: center;
-    padding: 1.5rem 0;
-    margin-top: 2rem;
-    background: #dfdfdf;
-    color: var(--text-color);
+    padding: 0.8rem;
+    font-family: 'Inter', sans-serif;
     font-size: 0.9rem;
+    resize: vertical;
 }
 
-footer a {
+/* --- Pomodoro Widget --- */
+#pomodoro-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+#pomodoro-timer {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+.pomodoro-controls button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
     color: var(--primary-color);
-    text-decoration: none;
+    cursor: pointer;
+    margin: 0 0.5rem;
 }
 
-footer a:hover {
-    text-decoration: underline;
+/* --- General & Helper Classes --- */
+.hidden {
+    display: none !important;
 }
 
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 1.5rem;
-    }
+#dependency-view {
+    text-align: center;
+    padding: 2rem;
+}
 
-    .semester-title {
-        font-size: 1.5rem;
-    }
+#schedule-container {
+    margin-top: 3rem;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+#schedule-container h3 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.schedule-table th, .schedule-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.8rem;
+    text-align: left;
+}
+.schedule-table th {
+    background-color: #f2f2f2;
 }
