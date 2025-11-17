@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciência da Computação - Universidade Livre</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="../../shared/styles/global.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1>Ciência da Computação</h1>
+        <div class="header-tools">
+            <button onclick="window.location.href='../../dashboard/index.html'" class="tool-btn">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button onclick="window.location.href='../../index.html'" class="tool-btn">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button id="toggle-view-btn" class="tool-btn">
+                <i class="fas fa-project-diagram"></i> Ver Dependências
+            </button>
+            <button id="chat-icon" class="tool-btn">
+                <i class="fas fa-robot"></i> Tutor IA
+            </button>
+        </div>
+    </header>
+
+    <main id="app-container">
+        <!-- Dashboard View: Mostra os cards de Etapa -->
+        <div id="dashboard-view">
+            <!-- Os cards de semestre serão inseridos aqui -->
+        </div>
+
+        <!-- Course View: Mostra os cards de Curso de uma Etapa específica -->
+        <div id="course-view" class="hidden">
+            <button id="back-to-dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
+            <h2 id="course-view-title"></h2>
+            <div id="courses-grid-container">
+                <!-- Os cards de curso serão inseridos aqui -->
+            </div>
+             <div id="schedule-container">
+                <h3><i class="fas fa-calendar-alt"></i> Cronograma Sugerido (3 semanas por matéria)</h3>
+                <!-- O cronograma será inserido aqui -->
+            </div>
+        </div>
+
+        <!-- Dependency Tree View -->
+        <div id="dependency-view" class="hidden">
+             <!-- A árvore de dependências será inserida aqui -->
+        </div>
+    </main>
+
+    <!-- Pomodoro Timer Widget -->
+    <div id="pomodoro-widget">
+        <h4><i class="fas fa-clock"></i> Foco Produtivo</h4>
+        <div id="pomodoro-timer">25:00</div>
+        <div class="pomodoro-controls">
+            <button id="pomodoro-start"><i class="fas fa-play"></i></button>
+            <button id="pomodoro-pause"><i class="fas fa-pause"></i></button>
+            <button id="pomodoro-reset"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="../../shared/scripts/storage.js"></script>
+    <script src="data.js"></script>
+
+    <!-- Markdown & Syntax Highlighting for Chatbot -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <script src="../../shared/scripts/course.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Chatbot Elements -->
+    <div id="chat-window" class="hidden">
+        <div id="chat-header">
+            <h3>AI Tutor</h3>
+            <button id="close-chat">X</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Pergunte algo sobre C.C...">
+            <button id="send-chat-btn">Enviar</button>
+        </div>
+    </div>
+</body>
+</html>

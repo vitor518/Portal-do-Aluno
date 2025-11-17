@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Dashboard - Universidade Livre</title>
+    <link rel="stylesheet" href="../shared/styles/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: #f5f7fa;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            gap: 2rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .courses-progress {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .course-progress-item {
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-track {
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badges-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .badge-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .badge-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>📊 Meu Dashboard</h1>
+        <p>Acompanhe seu progresso em todos os cursos</p>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Estatísticas Gerais -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">🎓</div>
+                <div class="stat-value" id="total-courses">0</div>
+                <div class="stat-label">Cursos em Progresso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="total-disciplines">0</div>
+                <div class="stat-label">Disciplinas Completas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Dias Consecutivos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-value" id="total-hours">0</div>
+                <div class="stat-label">Horas de Estudo</div>
+            </div>
+        </div>
+
+        <!-- Progresso por Curso -->
+        <div class="courses-progress">
+            <h2>Progresso por Curso</h2>
+            <div id="courses-progress-container"></div>
+        </div>
+
+        <!-- Badges Conquistados -->
+        <div class="badges-section">
+            <h2>🏆 Badges Conquistados</h2>
+            <div class="badges-grid" id="badges-container"></div>
+        </div>
+
+        <!-- Gráfico de Tempo de Estudo -->
+        <div class="chart-container">
+            <h2>Tempo de Estudo (Últimos 7 Dias)</h2>
+            <canvas id="study-time-chart"></canvas>
+        </div>
+    </div>
+
+    <script src="../shared/scripts/storage.js"></script>
+    <script>
+        // Carrega dados do storage
+        const data = storage.getData();
+        const stats = storage.getGlobalStats();
+
+        // Atualiza estatísticas
+        document.getElementById('total-courses').textContent =
+            Object.keys(data.courses).filter(c =>
+                Object.keys(data.courses[c].progress).length > 0
+            ).length;
+        document.getElementById('total-disciplines').textContent = stats.totalDisciplinesCompleted;
+        document.getElementById('streak').textContent = stats.streak;
+        document.getElementById('total-hours').textContent = stats.totalHoursStudied;
+
+        // Renderiza progresso por curso
+        const coursesContainer = document.getElementById('courses-progress-container');
+        Object.keys(data.courses).forEach(courseName => {
+            const course = data.courses[courseName];
+            const totalProgress = Object.keys(course.progress).length;
+            const completedProgress = Object.keys(course.progress).filter(
+                id => course.progress[id].main
+            ).length;
+            const percentage = totalProgress > 0
+                ? Math.round((completedProgress / totalProgress) * 100)
+                : 0;
+
+            const displayName = courseName === 'ciencia-computacao'
+                ? 'Ciência da Computação'
+                : 'Matemática';
+
+            coursesContainer.innerHTML += `
+                <div class="course-progress-item">
+                    <div class="progress-bar-label">
+                        <span>${displayName}</span>
+                        <span>${completedProgress}/${totalProgress} disciplinas</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" style="width: ${percentage}%">
+                            ${percentage}%
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Renderiza badges
+        const badgesContainer = document.getElementById('badges-container');
+        const allBadges = [...data.globalBadges];
+        Object.keys(data.courses).forEach(courseName => {
+            allBadges.push(...data.courses[courseName].badges);
+        });
+
+        if (allBadges.length === 0) {
+            badgesContainer.innerHTML = '<p style="text-align: center; color: #999;">Nenhum badge conquistado ainda. Continue estudando!</p>';
+        } else {
+            allBadges.forEach(badge => {
+                badgesContainer.innerHTML += `
+                    <div class="badge-item">
+                        <div class="badge-icon">🏅</div>
+                        <div style="font-size: 0.85rem; font-weight: 600;">${badge}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Gráfico de tempo de estudo
+        const ctx = document.getElementById('study-time-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Minutos de Estudo',
+                    data: [45, 60, 30, 90, 75, 120, 0], // Exemplo
+                    backgroundColor: 'rgba(39, 174, 96, 0.6)',
+                    borderColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
